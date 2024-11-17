@@ -1,4 +1,6 @@
-import type { MetaFunction } from "@remix-run/node";
+import { type MetaFunction } from "@remix-run/node";
+import { Await, useLoaderData } from "@remix-run/react";
+import { Suspense } from "react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -7,7 +9,23 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export function loader() {
+  const now = new Date().toISOString(); // Current time immediately
+
+  // Deferred time with a 5-second delay
+  const deferredTime = new Promise<string>((resolve) =>
+    setTimeout(() => resolve(new Date().toISOString()), 2000)
+  );
+
+  return {
+    now,
+    deferredNow: deferredTime,
+  };
+}
+
 export default function Index() {
+  const { now, deferredNow } = useLoaderData<typeof loader>();
+
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-16">
@@ -28,6 +46,14 @@ export default function Index() {
             />
           </div>
         </header>
+        <div>
+          <p>Current time: {now}</p>
+          <Suspense fallback={<p>Loading deferred time...</p>}>
+            <Await resolve={deferredNow}>
+              {(deferredNow) => <p>Deferred time: {deferredNow}</p>}
+            </Await>
+          </Suspense>
+        </div>
         <nav className="flex flex-col items-center justify-center gap-4 rounded-3xl border border-gray-200 p-6 dark:border-gray-700">
           <p className="leading-6 text-gray-700 dark:text-gray-200">
             What&apos;s next?
